@@ -69,10 +69,7 @@
             setTimeout(() => tokenClient.requestAccessToken({ prompt: 'consent' }), 500);
         };
 
-        <script>
-    // ... (переменные CLIENT_ID и FOLDER_ID остаются прежними) ...
-
-    async function handleUpload() {
+        async function handleUpload() {
         const fileInput = document.getElementById('fileInput');
         const status = document.getElementById('statusSelect').value;
         const place = document.getElementById('placeSelect').value;
@@ -156,7 +153,7 @@
             statusDiv.textContent = '✅ Фото загружено! Сохраняем в таблицу...';
 
             // 3. Отправляем данные в таблицу
-            const SHEET_URL = 'https://script.google.com/macros/s/ТВОЙ_GAS_WEB_APP_ID/exec';
+            const SHEET_URL = 'https://script.google.com/macros/s/AKfycbySXvxKvKqbs7o9qr_6oPG4QL90TdD4EVGs6oGK_-IVsi4W4mkeG2kDy8L0dJKiyPxzHQ/exec';
             
             await fetch(SHEET_URL, {
                 method: 'POST',
@@ -181,63 +178,6 @@
             btn.disabled = false;
         }
     }
-</script>
-
-            const file = fileInput.files[0];
-            btn.disabled = true;
-            statusDiv.textContent = '⏳ Загрузка на Диск...';
-
-            try {
-                // 1. Загружаем файл напрямую на Google Drive
-                const metadata = {
-                    name: file.name.replace(/\.[^/.]+$/, "") + '.jpg',
-                    parents: [FOLDER_ID],
-                    mimeType: 'image/jpeg'
-                };
-
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', file);
-
-                const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                    body: form
-                });
-
-                if (!uploadRes.ok) throw new Error('Ошибка загрузки файла');
-                const fileData = await uploadRes.json();
-                const imageUrl = `https://lh3.googleusercontent.com/d/${fileData.id}=w1000`;
-
-                statusDiv.textContent = '✅ Фото загружено! Сохраняем в таблицу...';
-
-                // 2. Отправляем данные в таблицу через твой GAS Web App
-                // ВАЖНО: Вставь сюда URL своего веб-приложения GAS (doPost)
-                const SHEET_URL = 'https://script.google.com/macros/s/AKfycbySXvxKvKqbs7o9qr_6oPG4QL90TdD4EVGs6oGK_-IVsi4W4mkeG2kDy8L0dJKiyPxzHQ/exec';
-                
-                await fetch(SHEET_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'addItem',
-                        fileName: metadata.name,
-                        imageUrl: imageUrl,
-                        statusId: status,
-                        placeId: place
-                    })
-                });
-
-                statusDiv.textContent = '🎉 Всё готово! Вещь добавлена.';
-                fileInput.value = '';
-
-            } catch (err) {
-                console.error(err);
-                statusDiv.textContent = '❌ Ошибка: ' + err.message;
-            } finally {
-                btn.disabled = false;
-            }
-        }
     </script>
 </body>
 </html>
