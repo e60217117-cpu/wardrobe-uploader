@@ -69,19 +69,119 @@
             setTimeout(() => tokenClient.requestAccessToken({ prompt: 'consent' }), 500);
         };
 
-        async function handleUpload() {
-            const fileInput = document.getElementById('fileInput');
-            const status = document.getElementById('statusSelect').value;
-            const place = document.getElementById('placeSelect').value;
-            const btn = document.getElementById('uploadBtn');
-            const statusDiv = document.getElementById('status');
+        <script>
+    // ... (переменные CLIENT_ID и FOLDER_ID остаются прежними) ...
 
-            if (!fileInput.files.length) { alert('Выберите фото!'); return; }
-            if (!accessToken) { 
-                tokenClient.requestAccessToken({ prompt: 'consent' }); 
-                await new Promise(r => setTimeout(r, 2000));
-                if (!accessToken) { statusDiv.textContent = '❌ Нет доступа. Обновите страницу.'; return; }
-            }
+    async function handleUpload() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('statusSelect').value;
+        const place = document.getElementById('placeSelect').value;
+        const btn = document.getElementById('uploadBtn');
+        const statusDiv = document.getElementById('status');
+
+        if (!fileInput.files.length) { alert('Выберите фото!'); return; }
+        if (!accessToken) { 
+            tokenClient.requestAccessToken({ prompt: 'consent' }); 
+            await new Promise(r => setTimeout(r, 2000));
+            if (!accessToken) { statusDiv.textContent = '❌ Нет доступа. Обновите страницу.'; return; }
+        }
+
+        const file = fileInput.files[0];
+        btn.disabled = true;
+        statusDiv.textContent = '⏳ Сжатие до 40КБ...';
+
+        try {
+            // 1. СЖАТИЕ И ОБРАБОТКА В БРАУЗЕРЕ (КАК В COLAB)
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            await new Promise(resolve => img.onload = resolve);
+
+            // Параметры точно как в твоем Colab-скрипте
+            const CANVAS_WIDTH = 540;
+            const CLOTHES_RATIO = 0.75;
+            const PAD = 20;
+            
+            // Рассчитываем размеры одежды
+            const targetW = Math.round(CANVAS_WIDTH * CLOTHES_RATIO); // 405px
+            const ratio = targetW / img.width;
+            const newW = targetW;
+            const newH = Math.round(img.height * ratio);
+            
+            // Рассчитываем итоговый размер холста
+            const canvasW = CANVAS_WIDTH + (PAD * 2); // 580px
+            const canvasH = newH + (PAD * 2) + 10;
+            
+            // Рисуем на Canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+            const ctx = canvas.getContext('2d');
+            
+            // Белый фон (#FCFCFA как в Colab)
+            ctx.fillStyle = '#FCFCFA';
+            ctx.fillRect(0, 0, canvasW, canvasH);
+            
+            // Центрируем вещь
+            const xPos = (CANVAS_WIDTH - newW) / 2;
+            ctx.drawImage(img, xPos + PAD, PAD, newW, newH);
+            
+            // Конвертируем в Blob с качеством 85%
+            const compressedBlob = await new Promise(resolve => 
+                canvas.toBlob(resolve, 'image/jpeg', 0.85)
+            );
+
+            statusDiv.textContent = '⏳ Загрузка на Диск...';
+
+            // 2. Загружаем УЖЕ СЖАТЫЙ файл на Google Drive
+            const metadata = {
+                name: file.name.replace(/\.[^/.]+$/, "") + '.jpg',
+                parents: [FOLDER_ID],
+                mimeType: 'image/jpeg'
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', compressedBlob); // Отправляем сжатый blob, а не оригинальный file
+
+            const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
+
+            if (!uploadRes.ok) throw new Error('Ошибка загрузки файла');
+            const fileData = await uploadRes.json();
+            const imageUrl = `https://lh3.googleusercontent.com/d/${fileData.id}=w1000`;
+
+            statusDiv.textContent = '✅ Фото загружено! Сохраняем в таблицу...';
+
+            // 3. Отправляем данные в таблицу
+            const SHEET_URL = 'https://script.google.com/macros/s/ТВОЙ_GAS_WEB_APP_ID/exec';
+            
+            await fetch(SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'addItem',
+                    fileName: metadata.name,
+                    imageUrl: imageUrl,
+                    statusId: status,
+                    placeId: place
+                })
+            });
+
+            statusDiv.textContent = ` Всё готово! Вес: ${Math.round(compressedBlob.size/1024)} KB`;
+            fileInput.value = '';
+
+        } catch (err) {
+            console.error(err);
+            statusDiv.textContent = '❌ Ошибка: ' + err.message;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
 
             const file = fileInput.files[0];
             btn.disabled = true;
