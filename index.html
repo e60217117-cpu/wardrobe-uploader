@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка вещей</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
+        .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { margin-top: 0; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; margin-bottom: 20px; font-size: 14px; color: #e65100; }
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background: #4CAF50; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        #status { margin-top: 10px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>➕ Добавить вещь</h2>
+        <div class="warning">⚠️ Фото должно быть вырезано и иметь белый фон (JPG).</div>
+        
+        <input type="file" id="fileInput" accept="image/jpeg, image/jpg">
+        
+        <label>Статус *</label>
+        <select id="statusSelect">
+            <option value="ST_OK">Доступна</option>
+            <option value="ST_WASH">В стирке</option>
+            <option value="ST_TRASH">Выкинуть</option>
+        </select>
 
+        <label>Месторасположение *</label>
+        <select id="placeSelect">
+            <option value="PL_HOME">Дома</option>
+            <option value="PL_PARENTS">У родителей</option>
+            <option value="PL_OTHER">Другое</option>
+        </select>
+
+        <button onclick="handleUpload()" id="uploadBtn">Загрузить</button>
+        <div id="status"></div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // ⚠️ ЗАМЕНИ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
+        const CLIENT_ID = '898168528113-u2bupprirug5ch0hcms80ntrge57qrur.apps.googleusercontent.com'; 
+        const FOLDER_ID = '1E0YE9_zu6vbJomcyyhKYW_xWtjXrLC3x'; 
+        
+        let tokenClient;
+        let accessToken = null;
+
+        function initTokenClient() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (res) => {
+                    if (res.access_token) {
+                        accessToken = res.access_token;
+                        document.getElementById('status').textContent = '✅ Доступ получен!';
+                        document.getElementById('status').style.color = '#4CAF50';
+                    }
+                },
+            });
+        }
+
+        window.onload = () => {
+            initTokenClient();
+            // Запрашиваем токен при открытии страницы
+            setTimeout(() => tokenClient.requestAccessToken({ prompt: 'consent' }), 500);
+        };
+
+        async function handleUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('statusSelect').value;
+            const place = document.getElementById('placeSelect').value;
+            const btn = document.getElementById('uploadBtn');
+            const statusDiv = document.getElementById('status');
+
+            if (!fileInput.files.length) { alert('Выберите фото!'); return; }
+            if (!accessToken) { 
+                tokenClient.requestAccessToken({ prompt: 'consent' }); 
+                await new Promise(r => setTimeout(r, 2000));
+                if (!accessToken) { statusDiv.textContent = '❌ Нет доступа. Обновите страницу.'; return; }
+            }
+
+            const file = fileInput.files[0];
+            btn.disabled = true;
+            statusDiv.textContent = '⏳ Загрузка на Диск...';
+
+            try {
+                // 1. Загружаем файл напрямую на Google Drive
+                const metadata = {
+                    name: file.name.replace(/\.[^/.]+$/, "") + '.jpg',
+                    parents: [FOLDER_ID],
+                    mimeType: 'image/jpeg'
+                };
+
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+
+                const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    body: form
+                });
+
+                if (!uploadRes.ok) throw new Error('Ошибка загрузки файла');
+                const fileData = await uploadRes.json();
+                const imageUrl = `https://lh3.googleusercontent.com/d/${fileData.id}=w1000`;
+
+                statusDiv.textContent = '✅ Фото загружено! Сохраняем в таблицу...';
+
+                // 2. Отправляем данные в таблицу через твой GAS Web App
+                // ВАЖНО: Вставь сюда URL своего веб-приложения GAS (doPost)
+                const SHEET_URL = 'https://script.google.com/macros/s/ТВОЙ_GAS_WEB_APP_ID/exec';
+                
+                await fetch(SHEET_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'addItem',
+                        fileName: metadata.name,
+                        imageUrl: imageUrl,
+                        statusId: status,
+                        placeId: place
+                    })
+                });
+
+                statusDiv.textContent = '🎉 Всё готово! Вещь добавлена.';
+                fileInput.value = '';
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.textContent = '❌ Ошибка: ' + err.message;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
