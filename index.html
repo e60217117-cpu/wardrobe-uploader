@@ -176,6 +176,9 @@
 
         <label>Метки (можно отметить)</label>
         <div class="checkbox-group" id="markGroup">
+                    <label>💬 Комментарий (необязательно)</label>
+        <textarea id="noteInput" style="width:100%; min-height:60px; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:13px; resize:vertical; box-sizing:border-box; font-family:inherit;" maxlength="200" placeholder="Напишите заметку о вещи..."></textarea>
+        <div style="font-size:10px; color:#999; margin-top:4px; text-align:right;">Макс. 200 символов</div>
             <label class="checkbox-label"><input type="checkbox" value="LIKE_OFTEN"> Часто ношу</label>
             <label class="checkbox-label"><input type="checkbox" value="LIKE_FAV"> Избранное</label>
         </div>
@@ -326,14 +329,23 @@
 
                 statusDiv.textContent = '✅ Фото загружено! Сохраняем данные...';
 
-                // Сбор всех тегов
+                                // Сбор всех тегов
                 const tags = [
                     ...getSelectedTags('seasonGroup'),
                     ...getSelectedTags('occasionGroup'),
                     ...getSelectedTags('markGroup')
                 ];
+                
+                // Добавляем лайк, если выбран
                 const likeTag = document.querySelector('input[name="like"]:checked')?.value;
                 if (likeTag) tags.push(likeTag);
+
+                // === ДОБАВЛЯЕМ ЗАМЕТКУ КАК ТЕГ ===
+                const noteText = document.getElementById('noteInput').value.trim();
+                if (noteText) {
+                    tags.push('NOTE_' + noteText);
+                }
+                // ================================
 
                 // Отправка в таблицу
                 await fetch(SHEET_URL, {
