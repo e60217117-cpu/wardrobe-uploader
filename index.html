@@ -82,10 +82,13 @@
         }
         .checkbox-label:hover { background: #f1f5f9; border-color: #cbd5e1; }
         .checkbox-label input { display: none; }
-        .checkbox-label.checked { background: #22c55e; /* ЯРКО-ЗЕЛЕНЫЙ */
-    border-color: #16a34a;
-    color: #ffffff; /* Белый текст */
-    font-weight: 600; }
+        .checkbox-label.checked { 
+    background: #16a34a !important; /* Более насыщенный зеленый */
+    border-color: #14532d !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);
+}
         
         /* Стили для радио-кнопок */
         .radio-group { display: flex; gap: 10px; }
@@ -95,10 +98,13 @@
         }
         .radio-label:hover { background: #f1f5f9; }
         .radio-label input { display: none; }
-        .radio-label.selected { background: #22c55e; /* ТОТ ЖЕ ЯРКО-ЗЕЛЕНЫЙ */
-    border-color: #16a34a;
-    color: #ffffff; /* Белый текст */
-    font-weight: 600; }
+        .radio-label.selected { 
+    background: #16a34a !important; /* Насыщенный зеленый */
+    border-color: #14532d !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);
+}
 
         /* Кнопка загрузки */
         button { width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 24px; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2); }
@@ -306,21 +312,21 @@
         }
 
                 function selectLike(label, value) {
-    const input = label.querySelector('input');
+    const allLabels = document.querySelectorAll('#likeGroup .radio-label');
+    const isCurrentlySelected = label.classList.contains('selected');
     
-    // Сначала снимаем все выделения
-    document.querySelectorAll('#likeGroup .radio-label').forEach(l => {
+    // Снимаем выделение со всех кнопок
+    allLabels.forEach(l => {
         l.classList.remove('selected');
         l.querySelector('input').checked = false;
     });
     
-    // Затем, если клик был по этой же кнопке — ничего не делаем (оставляем пустым)
-    // Если клик по другой — выбираем её
-    if (!label.classList.contains('selected')) {
+    // Если нажали на уже выбранную кнопку — оставляем всё пустым
+    // Если нажали на новую — выделяем её
+    if (!isCurrentlySelected) {
         label.classList.add('selected');
-        input.checked = true;
+        label.querySelector('input').checked = true;
     }
-    // Если клик по уже выбранной — она просто остается пустой (выделение снято выше)
 }
 
         function validateForm() {
