@@ -20,12 +20,12 @@
         input[type="file"]:focus, select:focus { outline: none; border-color: #3b82f6; }
         input[type="file"] { padding: 8px; background: #f8fafc; }
 
-        /* === ВИЗУАЛЬНЫЕ БЛОКИ === */
+        /* === ВИЗУАЛЬНЫЕ БЛОКИ (НОВЫЕ ЦВЕТА) === */
         
-        /* 1. Блок обязательных полей (Салатовый) */
+        /* 1. Блок обязательных полей (РОЗОВЫЙ) */
         .required-group {
-            background-color: #f0fdf4; /* Очень светлый зеленый */
-            border: 1px solid #bbf7d0;
+            background-color: #fdf2f8; /* Нежно-розовый фон */
+            border: 1px solid #fce7f3;
             border-radius: 12px;
             padding: 16px;
             margin-top: 20px;
@@ -33,12 +33,12 @@
         }
         .required-group-title {
             font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; 
-            color: #166534; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+            color: #be185d; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
         }
 
-        /* 2. Блоки опциональных групп (Серый/Нейтральный) */
+        /* 2. Блоки опциональных групп */
         .option-group {
-            background-color: #f8fafc; /* Светло-серый */
+            background-color: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 16px;
@@ -49,9 +49,23 @@
             font-size: 13px; color: #334155; font-weight: 600; margin-bottom: 12px; display: block;
         }
 
+        /* Специальный цвет для НАЗНАЧЕНИЯ (ЗЕЛЕНЫЙ) */
+        .occasion-group {
+            background-color: #f0fdf4; /* Светло-зеленый фон */
+            border: 1px solid #dcfce7;
+        }
+        .occasion-group .group-title { color: #166534; }
+
+        /* Специальный цвет для МЕТОК (ГОЛУБОЙ) */
+        .marks-group {
+            background-color: #eff6ff; /* Светло-голубой фон */
+            border: 1px solid #dbeafe;
+        }
+        .marks-group .group-title { color: #1e40af; }
+
         /* 3. Блок комментария (Желтоватый) */
         .comment-group {
-            background-color: #fffbeb; /* Светло-желтый */
+            background-color: #fffbeb;
             border: 1px solid #fef08a;
             border-radius: 12px;
             padding: 16px;
@@ -59,7 +73,7 @@
             margin-bottom: 16px;
         }
 
-        /* Стили для чекбоксов (множественный выбор) */
+        /* Стили для чекбоксов */
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
         .checkbox-label { 
             display: inline-flex; align-items: center; gap: 6px; 
@@ -70,7 +84,7 @@
         .checkbox-label input { display: none; }
         .checkbox-label.checked { background: #dcfce7; border-color: #86efac; color: #166534; font-weight: 600; }
         
-        /* Стили для радио-кнопок (одиночный выбор) */
+        /* Стили для радио-кнопок */
         .radio-group { display: flex; gap: 10px; }
         .radio-label { 
             flex: 1; text-align: center; padding: 10px; border: 1px solid #e2e8f0; 
@@ -98,9 +112,9 @@
         <h2>👗 Добавить новую одежду</h2>
         <div class="warning">️ Фото должно быть на белом фоне (покрывало/простыня) и желательно не больше 5мб (JPG).</div>
         
-        <!-- ОБЯЗАТЕЛЬНЫЕ ПОЛЯ В ОДНОМ БЛОКЕ -->
+        <!-- ОБЯЗАТЕЛЬНЫЕ ПОЛЯ В РОЗОВОМ БЛОКЕ -->
         <div class="required-group">
-            <div class="required-group-title">📋 Обязательные данные</div>
+            <div class="required-group-title"> Обязательные данные</div>
             
             <label class="required">Фотография</label>
             <input type="file" id="fileInput" accept="image/jpeg, image/jpg" onchange="validateForm()">
@@ -129,6 +143,7 @@
                 <option value="CAT_07">Другое</option>
             </select>
 
+            <!-- ИСПРАВЛЕННЫЙ АЛФАВИТНЫЙ СПИСОК ТИПОВ ОДЕЖДЫ -->
             <label class="required">Тип одежды</label>
             <select id="typeSelect" onchange="validateForm()">
                 <option value="">— Выберите —</option>
@@ -208,7 +223,8 @@
             </div>
         </div>
 
-        <div class="option-group">
+        <!-- НАЗНАЧЕНИЕ В ЗЕЛЕНОМ БЛОКЕ -->
+        <div class="option-group occasion-group">
             <span class="group-title">🎯 Назначение (можно несколько)</span>
             <div class="checkbox-group" id="occasionGroup">
                 <label class="checkbox-label"><input type="checkbox" value="O_WALK_FAST"> Для быстрой прогулки</label>
@@ -236,7 +252,8 @@
             </div>
         </div>
 
-        <div class="option-group">
+        <!-- МЕТКИ В ГОЛУБОМ БЛОКЕ -->
+        <div class="option-group marks-group">
             <span class="group-title">⭐ Метки (можно отметить)</span>
             <div class="checkbox-group" id="markGroup">
                 <label class="checkbox-label"><input type="checkbox" value="LIKE_OFTEN"> Часто ношу</label>
