@@ -49,12 +49,12 @@
             font-size: 13px; color: #334155; font-weight: 600; margin-bottom: 12px; display: block;
         }
 
-        /* Специальный цвет для НАЗНАЧЕНИЯ (ЗЕЛЕНЫЙ) */
+                /* Специальный цвет для НАЗНАЧЕНИЯ (ОРАНЖЕВЫЙ) */
         .occasion-group {
-            background-color: #f0fdf4; /* Светло-зеленый фон */
-            border: 1px solid #dcfce7;
+            background-color: #fff7ed; /* Нежно-оранжевый фон */
+            border: 1px solid #ffedd5;
         }
-        .occasion-group .group-title { color: #166534; }
+        .occasion-group .group-title { color: #c2410c; }
 
         /* Специальный цвет для МЕТОК (ГОЛУБОЙ) */
         .marks-group {
@@ -299,10 +299,22 @@
             });
         }
 
-        function selectLike(label, value) {
-            document.querySelectorAll('#likeGroup .radio-label').forEach(l => l.classList.remove('selected'));
-            label.classList.add('selected');
-            label.querySelector('input').checked = true;
+                function selectLike(label, value) {
+            const input = label.querySelector('input');
+            
+            // Если эта кнопка уже выбрана — снимаем выделение (делаем пустым)
+            if (label.classList.contains('selected')) {
+                label.classList.remove('selected');
+                input.checked = false;
+            } else {
+                // Если не выбрана — выбираем её и снимаем выбор с другой
+                document.querySelectorAll('#likeGroup .radio-label').forEach(l => {
+                    l.classList.remove('selected');
+                    l.querySelector('input').checked = false;
+                });
+                label.classList.add('selected');
+                input.checked = true;
+            }
         }
 
         function validateForm() {
