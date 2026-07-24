@@ -256,11 +256,11 @@
             </div>
         </div>
 
-        <div class="option-group">
+                <div class="option-group">
             <span class="group-title">❤️ Лайк (выберите один или ничего)</span>
-            <div class="radio-group" id="likeGroup">
-                <label class="radio-label" onclick="selectLike(this, 'LIKE_YES')"><input type="radio" name="like" value="LIKE_YES"> Нравится</label>
-                <label class="radio-label" onclick="selectLike(this, 'DISLIKE_NO')"><input type="radio" name="like" value="DISLIKE_NO"> Не нравится</label>
+            <div class="checkbox-group" id="likeGroup">
+                <label class="checkbox-label like-btn"><input type="checkbox" value="LIKE_YES"> Нравится</label>
+                <label class="checkbox-label like-btn"><input type="checkbox" value="DISLIKE_NO"> Не нравится</label>
             </div>
         </div>
 
@@ -305,36 +305,30 @@
         }
         window.onload = () => { initTokenClient(); setupCheckboxListeners(); };
 
-        function setupCheckboxListeners() {
+                function setupCheckboxListeners() {
             document.querySelectorAll('.checkbox-label input').forEach(cb => {
-                cb.addEventListener('change', (e) => { e.target.parentElement.classList.toggle('checked', e.target.checked); });
+                cb.addEventListener('change', (e) => {
+                    const label = e.target.parentElement;
+                    label.classList.toggle('checked', e.target.checked);
+                    
+                    // === ЛОГИКА ДЛЯ ЛАЙКОВ (как радио-кнопки) ===
+                    if (label.classList.contains('like-btn')) {
+                        if (e.target.checked) {
+                            // Если выбрали лайк, снимаем галочку с другого
+                            document.querySelectorAll('#likeGroup .checkbox-label input').forEach(otherCb => {
+                                if (otherCb !== e.target) {
+                                    otherCb.checked = false;
+                                    otherCb.parentElement.classList.remove('checked');
+                                }
+                            });
+                        }
+                    }
+                    // ==============================================
+                });
             });
         }
 
-                function selectLike(label, value) {
-    // Получаем input внутри нажатого label
-    const input = label.querySelector('input');
-    
-    // Проверяем, была ли эта кнопка УЖЕ выбрана ДО клика
-    // (браузер еще не успел изменить checked, поэтому смотрим на класс)
-    const wasSelected = label.classList.contains('selected');
-    
-    // Сначала снимаем ВСЕ выделения и галочки
-    document.querySelectorAll('#likeGroup .radio-label').forEach(l => {
-        l.classList.remove('selected');
-        l.querySelector('input').checked = false;
-    });
-    
-    // Логика переключения:
-    // Если кнопка НЕ была выбрана — выбираем её
-    // Если БЫЛА выбрана — оставляем пустой (эффект "снятия")
-    if (!wasSelected) {
-        label.classList.add('selected');
-        input.checked = true;
-    }
-    // Важно: мы НЕ предотвращаем стандартное поведение, 
-    // но поскольку мы вручную управляем checked, это работает корректно
-}
+                
 
         function validateForm() {
             const file = document.getElementById('fileInput').files.length;
@@ -406,9 +400,15 @@
                 const imageUrl = `https://lh3.googleusercontent.com/d/${fileData.id}=w1000`;
                 statusDiv.textContent = '✅ Фото загружено! Сохраняем данные...';
 
-                const tags = [...getSelectedTags('seasonGroup'), ...getSelectedTags('occasionGroup'), ...getSelectedTags('markGroup')];
-                const likeTag = document.querySelector('input[name="like"]:checked')?.value;
-                if (likeTag) tags.push(likeTag);
+                                // Собираем все теги (сезоны, назначения, метки)
+                const tags = [
+                    ...getSelectedTags('seasonGroup'), 
+                    ...getSelectedTags('occasionGroup'), 
+                    ...getSelectedTags('markGroup'),
+                    ...getSelectedTags('likeGroup') // <=== ДОБАВЛЯЕМ ЛАЙКИ СЮДА ЖЕ
+                ];
+                
+                // Старые строки про likeTag можно полностью УДАЛИТЬ, они больше не нужны
 
                 const noteText = document.getElementById('noteInput').value.trim();
                 if (noteText) tags.push('NOTE_' + noteText);
