@@ -312,21 +312,28 @@
         }
 
                 function selectLike(label, value) {
-    const allLabels = document.querySelectorAll('#likeGroup .radio-label');
-    const isCurrentlySelected = label.classList.contains('selected');
+    // Получаем input внутри нажатого label
+    const input = label.querySelector('input');
     
-    // Снимаем выделение со всех кнопок
-    allLabels.forEach(l => {
+    // Проверяем, была ли эта кнопка УЖЕ выбрана ДО клика
+    // (браузер еще не успел изменить checked, поэтому смотрим на класс)
+    const wasSelected = label.classList.contains('selected');
+    
+    // Сначала снимаем ВСЕ выделения и галочки
+    document.querySelectorAll('#likeGroup .radio-label').forEach(l => {
         l.classList.remove('selected');
         l.querySelector('input').checked = false;
     });
     
-    // Если нажали на уже выбранную кнопку — оставляем всё пустым
-    // Если нажали на новую — выделяем её
-    if (!isCurrentlySelected) {
+    // Логика переключения:
+    // Если кнопка НЕ была выбрана — выбираем её
+    // Если БЫЛА выбрана — оставляем пустой (эффект "снятия")
+    if (!wasSelected) {
         label.classList.add('selected');
-        label.querySelector('input').checked = true;
+        input.checked = true;
     }
+    // Важно: мы НЕ предотвращаем стандартное поведение, 
+    // но поскольку мы вручную управляем checked, это работает корректно
 }
 
         function validateForm() {
