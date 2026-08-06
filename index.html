@@ -448,7 +448,10 @@
                 const compressedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
                 statusDiv.textContent = '⏳ Загрузка на Диск...';
 
-                const metadata = { name: file.name.replace(/\.[^/.]+$/, "") + '.jpg', parents: [FOLDER_ID], mimeType: 'image/jpeg' };
+                // 1. Чистое имя без расширения (для таблицы и приложения)
+                const cleanFileName = file.name.replace(/\.[^/.]+$/, ""); 
+                // 2. Имя с расширением (только для Google Диска)
+                const metadata = { name: cleanFileName + '.jpg', parents: [FOLDER_ID], mimeType: 'image/jpeg' };
                 const form = new FormData();
                 form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
                 form.append('file', compressedBlob);
@@ -478,7 +481,8 @@
                 await fetch(SHEET_URL, {
                     method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'addItem', fileName: metadata.name, imageUrl: imageUrl,
+                        action: 'addItem', fileName: cleanFileName, imageUrl: imageUrl, // <-- ИЗМЕНИЛИ ЗДЕСЬ
+                        // ... остальной код
                         statusId: document.getElementById('statusSelect').value,
                         placeId: document.getElementById('placeSelect').value,
                         categoryId: document.getElementById('categorySelect').value,
